@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Sign in · ATM Banking{% endblock %}
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-copy">
+        <p class="eyebrow">SECURE SELF-SERVICE BANKING</p>
+        <h1>Your money,<br><span>within reach.</span></h1>
+        <p>Manage your account through a clean digital ATM experience.</p>
+    </div>
+    <div class="card auth-card">
+        <div class="card-heading"><p class="eyebrow">WELCOME BACK</p><h2>Sign in</h2></div>
+        <form method="post" action="/login" class="form-stack">
+            <label>Username<input name="username" value="{{ username or '' }}" autocomplete="username" required></label>
+            <label>4-digit PIN<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="current-password" required></label>
+            <button class="primary-button" type="submit">Access account <span>→</span></button>
+        </form>
+        {% if show_forgot %}<p class="form-footer"><a href="/forgot-pin">Forgot your PIN?</a></p>{% endif %}
+        <p class="form-footer">New customer? <a href="/register">Create an account</a></p>
+        <div class="demo-note"><strong>Demo accounts</strong><br>ibrahim / 1345 &nbsp;·&nbsp; demo / 2468</div>
+    </div>
+</section>
+{% endblock %}

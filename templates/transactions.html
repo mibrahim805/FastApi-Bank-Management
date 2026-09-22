@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Transactions · ATM Banking{% endblock %}
+{% block content %}
+<section class="dashboard-heading compact"><div><p class="eyebrow">ACCOUNT ACTIVITY</p><h1>Transaction history</h1><p class="muted">Account {{ user.account_number }}</p></div><a class="back-link" href="/dashboard">← Back to dashboard</a></section>
+<section class="card activity-card full-activity">
+    {% if transactions %}<div class="transaction-list">{% for transaction in transactions %}<div class="transaction-row"><div class="transaction-symbol {{ 'positive' if transaction.kind == 'Deposit' else 'negative' }}">{{ '+' if transaction.kind == 'Deposit' else '−' }}</div><div class="transaction-main"><strong>{{ transaction.kind }}</strong><span>{{ transaction.description }} · {{ transaction.created_at.strftime('%d %b %Y, %I:%M %p') }}</span></div><div class="transaction-side"><div class="transaction-amount {{ 'positive-text' if transaction.kind == 'Deposit' else 'negative-text' }}">{{ '+' if transaction.kind == 'Deposit' else '−' }}{{ transaction.amount_cents|money }}</div><small>Balance {{ transaction.balance_after_cents|money }}</small></div></div>{% endfor %}</div>{% else %}<div class="empty-state">No transactions yet.</div>{% endif %}
+</section>
+{% endblock %}

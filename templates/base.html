@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ATM Banking{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/dashboard"><span class="brand-mark">$</span> ATM Banking</a>
+        {% if user %}
+        <div class="topbar-user">
+            <span>{{ user.full_name }}</span>
+            <form method="post" action="/logout"><button class="link-button" type="submit">Log out</button></form>
+        </div>
+        {% endif %}
+    </header>
+    <main class="page-shell">
+        {% if flash %}<div class="alert {{ flash.kind }}">{{ flash.message }}</div>{% endif %}
+        {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

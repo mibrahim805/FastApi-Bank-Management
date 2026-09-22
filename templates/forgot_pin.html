@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Reset PIN · ATM Banking{% endblock %}
+{% block content %}
+<section class="center-layout">
+    <div class="card auth-card register-card">
+        <div class="card-heading"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Verify your phone</h2><p>We will send a 6-digit verification code to your registered phone number.</p></div>
+        <form method="post" action="/forgot-pin" class="form-stack">
+            <label>Username<input name="username" value="{{ username or '' }}" autocomplete="username" required></label>
+            <label>Registered phone number<input name="phone_number" value="{{ phone_number or '' }}" placeholder="+923001234567" autocomplete="tel" required></label>
+            <button class="primary-button" type="submit">Send OTP <span>→</span></button>
+        </form>
+        <p class="form-footer"><a href="/login">← Back to sign in</a></p>
+    </div>
+</section>
+{% endblock %}
