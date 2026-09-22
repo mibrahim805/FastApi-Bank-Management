@@ -7,7 +7,7 @@
         <form method="post" action="/register" class="form-stack">
             <label>Full name<input name="full_name" value="{{ full_name or '' }}" autocomplete="name" required></label>
             <label>Username<input name="username" value="{{ username or '' }}" autocomplete="username" required></label>
-            <label>Phone number<input name="phone_number" value="{{ phone_number or '' }}" placeholder="+923001234567" autocomplete="tel" required></label>
+            <label>Phone number<input name="phone_number" value="{{ phone_number or '' }}" placeholder="Phone number" autocomplete="tel" required></label>
             <div class="two-columns">
                 <label>4-digit PIN<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required></label>
                 <label>Confirm PIN<input name="confirm_pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required></label>

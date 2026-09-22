@@ -22,15 +22,13 @@ Users can also create accounts from the registration page. PINs are stored as sa
 
 This is a learning project, not a production banking system. A real deployment would also need HTTPS, CSRF protection, rate limiting, audit controls, a production database, and proper banking/payment integrations.
 
-## Real SMS OTPs with Amazon SNS
+## Real SMS OTPs with TextBee
 
-Without AWS credentials, the app uses development mode: the OTP is logged in the terminal and shown on the verification page. To send real SMS messages through Amazon SNS, install the requirements and configure an AWS identity with the `sns:Publish` permission. Boto3 can use `aws configure` or these environment variables:
+Without a TextBee API key, the app uses development mode: the OTP is logged in the terminal and shown on the verification page. To send real SMS messages through TextBee, store the key in an ignored `.env` file:
 
-```bash
-export AWS_ACCESS_KEY_ID="your-access-key-id"
-export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
-export AWS_DEFAULT_REGION="us-east-1"
+```env
+TEXTBEE_API_KEY=your-textbee-api-key
 ```
 
-Amazon SNS requires phone numbers in E.164 format. New AWS accounts may be in the SMS sandbox, where only verified destination phone numbers can receive messages.
+TextBee also requires an Android phone with an active SIM registered as a device. Phone numbers must use E.164 format.
 # FastApi-Bank-Management

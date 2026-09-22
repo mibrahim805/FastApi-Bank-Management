@@ -4,4 +4,4 @@ jinja2
 python-multipart
 sqlalchemy
 itsdangerous
-boto3
+python-dotenv

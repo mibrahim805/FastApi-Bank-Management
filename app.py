@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import logging
 import os
 import re
 import secrets
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Annotated
 
-import boto3
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,11 +22,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import DateTime, ForeignKey, Integer, String, create_engine, inspect, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 from starlette.middleware.sessions import SessionMiddleware
+from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_URL = f"sqlite:///{BASE_DIR / 'atm.db'}"
 logger = logging.getLogger("atm_banking")
+load_dotenv(BASE_DIR / ".env")
 
 engine = create_engine(
     DATABASE_URL,
@@ -161,27 +165,43 @@ def mask_phone(phone: str) -> str:
 
 
 def send_otp(phone: str, otp: str) -> bool:
-    """Send an OTP through Amazon SNS, or use visible/logged development mode."""
-    try:
-        aws_session = boto3.Session()
-        credentials = aws_session.get_credentials()
-        region = os.getenv("AWS_DEFAULT_REGION") or aws_session.region_name
-        if credentials and region:
-            sns = aws_session.client("sns", region_name=region)
-            sns.publish(
-                PhoneNumber=phone,
-                Message=f"Your ATM Banking verification code is {otp}. It expires in 5 minutes.",
-                MessageAttributes={
-                    "AWS.SNS.SMS.SMSType": {
-                        "DataType": "String",
-                        "StringValue": "Transactional",
-                    }
-                },
-            )
+    """Send an OTP through TextBee, or use visible/logged development mode."""
+    textbee_api_key = os.getenv("TEXTBEE_API_KEY")
+    if textbee_api_key:
+        request_body = json.dumps({
+            "recipients": [phone],
+            "message": f"Your ATM Banking verification code is {otp}. It expires in 5 minutes.",
+        }).encode("utf-8")
+        request = urllib.request.Request(
+            "https://api.textbee.dev/api/v1/gateway/send-sms",
+            data=request_body,
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": textbee_api_key,
+                "User-Agent": "ATM-Banking/1.0",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                if response.status < 200 or response.status >= 300:
+                    raise RuntimeError("TextBee returned an unsuccessful response.")
             return True
-    except Exception:
-        logger.exception("Could not send OTP through Amazon SNS")
-        raise RuntimeError("The verification SMS could not be sent. Please check your AWS SNS configuration.")
+        except urllib.error.HTTPError as exc:
+            response_body = exc.read().decode("utf-8", errors="replace")
+            logger.error("TextBee HTTP %s response: %s", exc.code, response_body)
+            if exc.code == 401:
+                message = "TextBee rejected the API key. Generate a new API key in the TextBee dashboard."
+            elif exc.code == 403:
+                message = "TextBee denied SMS sending. Check your email verification, plan, and API key sending permissions."
+            elif exc.code == 429:
+                message = "TextBee message quota or rate limit reached."
+            else:
+                message = f"TextBee rejected the SMS request (HTTP {exc.code})."
+            raise RuntimeError(message)
+        except (urllib.error.URLError, TimeoutError, RuntimeError):
+            logger.exception("Could not send OTP through TextBee")
+            raise RuntimeError("The verification SMS could not be sent through TextBee.")
 
     logger.warning("Development OTP for %s: %s", phone, otp)
     return False
@@ -246,7 +266,7 @@ def login(request: Request, db: DB, username: Annotated[str, Form()], pin: Annot
             return page(request, "login.html", error="Too many failed attempts. Account locked for 5 minutes.", username=username, show_forgot=True)
         db.commit()
         remaining = 3 - user.failed_attempts
-        return page(request, "login.html", error=f"Invalid username or PIN. {remaining} attempt(s) remaining.", username=username)
+        return page(request, "login.html", error=f"Invalid username or PIN. {remaining} attempt(s) remaining.", username=username, show_forgot=True)
 
     user.failed_attempts = 0
     user.locked_until = None
